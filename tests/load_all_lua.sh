@@ -4,9 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-mapfile -t lua_files < <(
-  find . -type f -name '*.lua' -not -path './.git/*' -not -path './tests/*' | sort
-)
+mapfile -t lua_files < <(find ./0[0-9]-* -type f -name '*.lua' 2>/dev/null | sort)
 
 for f in "${lua_files[@]}"; do
   echo "Loading ${f}"

@@ -24,7 +24,7 @@ jobs:
         uses: JohnnyMorganz/stylua-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: latest
+          version: 0.20.0
 
       - name: Check Neovim version
         run: nvim --version

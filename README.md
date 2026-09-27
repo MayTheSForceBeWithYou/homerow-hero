@@ -16,7 +16,7 @@ A self-study repo for experienced engineers to learn Vim/Neovim deeply, with emp
 
 ## Repo structure policy
 
-Each lesson is a markdown file plus runnable Vimscript/Lua snippets that execute on Neovim nightly (targeting 0.12 APIs).
+Target state: each lesson directory contains a markdown lesson plus runnable Vimscript/Lua snippets for Neovim nightly (targeting 0.12 APIs). In this initial scaffold, `00-navigation/` is implemented first and the remaining lesson directories are placeholders.
 
 ## Verification
 
@@ -26,4 +26,3 @@ CI is the source of truth:
 2. Run `stylua` on all Lua code.
 3. Load every `*.lua` snippet headlessly with `nvim --headless -u NONE` and fail on errors.
 4. Execute lesson verification scripts in `tests/`.
-
