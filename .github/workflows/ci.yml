@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Neovim nightly
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: nightly
+
+      - name: Setup stylua
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+
+      - name: Check Neovim version
+        run: nvim --version
+
+      - name: Run stylua
+        run: stylua --check .
+
+      - name: Load all Lua snippets headlessly
+        run: bash /home/runner/work/homerow-hero/homerow-hero/tests/load_all_lua.sh
+
+      - name: Run lesson verification scripts
+        run: bash /home/runner/work/homerow-hero/homerow-hero/tests/run_headless_tests.sh
