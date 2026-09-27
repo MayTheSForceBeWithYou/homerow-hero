@@ -15,6 +15,16 @@ when it is a normal file buffer with unsaved changes — before compiling.
 `save_if_modified()` is that keymap's core; the test proves it against real
 buffers, including a real file on disk.
 
+## Docs discovery, documented live
+
+The test's third case originally tried to set up a "modified `nofile`
+buffer" — and CI failed, because `:h buftype` says `nofile` (and `nowrite`)
+buffers are *never considered 'modified'*. There is nothing to save, so the
+platform does not track it. The `buftype == ''` guard in
+`save_if_modified()` is therefore not redundant with the `modified` check:
+it is the explicit statement of intent, and it also covers special buftypes
+(like `acwrite`) where `modified` *can* be true.
+
 ## Exercises (help-driven)
 
 1. Extend `save_if_modified` to also skip buffers whose `filetype` is in a
