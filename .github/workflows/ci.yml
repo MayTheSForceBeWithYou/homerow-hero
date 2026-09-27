@@ -33,6 +33,8 @@ jobs:
         with:
           version: 0.20.0
           token: ${{ secrets.GITHUB_TOKEN }}
+          # Install only; the real check runs in the next step.
+          args: --version
 
       - name: Check Neovim version
         run: nvim --version
