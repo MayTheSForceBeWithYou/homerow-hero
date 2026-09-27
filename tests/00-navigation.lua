@@ -17,4 +17,4 @@ for _, m in ipairs(maps) do
 end
 assert(found, 'expected <leader>hh map to exist')
 
-vim.cmd('qa')
+vim.cmd('qa!')
