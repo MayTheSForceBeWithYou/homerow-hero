@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Neovim nightly
+        # Pinned to the v1 tag's commit; re-pin deliberately, never float.
+        uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1
+        with:
+          neovim: true
+          version: nightly
+
+      - name: Setup stylua
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          version: 0.20.0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Install only; the real check runs in the next step.
+          args: --version
+
+      - name: Check Neovim version
+        run: nvim --version
+
+      - name: Run stylua
+        run: stylua --check .
+
+      - name: Load all Lua snippets headlessly
+        run: bash tests/load_all_lua.sh
+
+      - name: Run lesson verification scripts
+        run: bash tests/run_headless_tests.sh

@@ -1,0 +1,3 @@
+# Keep line endings LF on every platform so `stylua --check` passes
+# on Windows checkouts too.
+* text=auto eol=lf
