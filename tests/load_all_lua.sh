@@ -8,5 +8,5 @@ mapfile -t lua_files < <(find . -type f -name '*.lua' -not -path './.git/*' | so
 
 for f in "${lua_files[@]}"; do
   echo "Loading ${f}"
-  nvim --headless -u NONE "+lua dofile('${f#./}')" +qa
- done
+  nvim --headless -u NONE -l "${f#./}"
+done

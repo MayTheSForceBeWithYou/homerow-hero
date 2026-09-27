@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -30,7 +33,7 @@ jobs:
         run: stylua --check .
 
       - name: Load all Lua snippets headlessly
-        run: bash /home/runner/work/homerow-hero/homerow-hero/tests/load_all_lua.sh
+        run: bash tests/load_all_lua.sh
 
       - name: Run lesson verification scripts
-        run: bash /home/runner/work/homerow-hero/homerow-hero/tests/run_headless_tests.sh
+        run: bash tests/run_headless_tests.sh
