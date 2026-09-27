@@ -22,7 +22,7 @@ Target state: each lesson directory contains a markdown lesson plus runnable Vim
 
 CI is the source of truth:
 
-1. Pin and install Neovim nightly.
+1. Install and track Neovim nightly (moving target for 0.12 APIs).
 2. Run `stylua` on all Lua code.
 3. Load every `*.lua` snippet headlessly with `nvim --headless -u NONE` and fail on errors.
 4. Execute lesson verification scripts in `tests/`.
