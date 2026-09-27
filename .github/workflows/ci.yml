@@ -9,13 +9,21 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Neovim nightly
-        uses: rhysd/action-setup-vim@v1
+        # Pinned to the v1 tag's commit; re-pin deliberately, never float.
+        uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1
         with:
           neovim: true
           version: nightly
@@ -24,6 +32,7 @@ jobs:
         uses: JohnnyMorganz/stylua-action@v4
         with:
           version: 0.20.0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Neovim version
         run: nvim --version
