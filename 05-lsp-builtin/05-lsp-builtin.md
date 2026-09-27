@@ -15,6 +15,15 @@ diagnostics later.
 test pins the entry points (`vim.lsp.config`, `vim.lsp.enable`) so CI catches
 renames on nightly before you do.
 
+## Nightly drift, documented live
+
+On 2026-09-27 this repo's own CI caught a real API change: `vim.lsp.config`
+was a plain function on 0.11/0.12, but on 0.13-dev nightly it became a
+*callable table* — calling it still works, and you can now also read configs
+back via `vim.lsp.config.<name>`. The test in `tests/05-lsp-builtin.lua`
+asserts callability rather than `type(x) == 'function'` for exactly this
+reason: pin the capability, not the implementation detail.
+
 ## Exercises (help-driven)
 
 1. Read `:h vim.lsp.config` and write a config for `clangd` with a
