@@ -23,7 +23,6 @@ jobs:
       - name: Setup stylua
         uses: JohnnyMorganz/stylua-action@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           version: 0.20.0
 
       - name: Check Neovim version
