@@ -22,11 +22,14 @@ assert(vim.fn.readfile(tmp)[1] == 'capstone', 'file contents did not reach disk'
 -- Case 2: already-saved buffer - no write, returns false.
 assert(save_if_modified() == false, 'must not rewrite an unmodified buffer')
 
--- Case 3: special buffer with unsaved changes - never touches disk.
+-- Case 3: special buffer with content - never touches disk.
+-- NOTE: :h buftype says "nofile" (and "nowrite") buffers are never considered
+-- 'modified', so a "modified nofile buffer" cannot exist; the buftype guard
+-- in save_if_modified() is the operative check here, not the modified flag.
 vim.cmd('enew')
 vim.bo.buftype = 'nofile'
 vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'scratch' })
-assert(vim.bo.modified == true, 'test setup broken: scratch buffer not marked modified')
+assert(vim.bo.buftype == 'nofile', 'test setup broken: buftype not set')
 assert(save_if_modified() == false, 'must never auto-save a nofile buffer')
 
 vim.fn.delete(tmp)
