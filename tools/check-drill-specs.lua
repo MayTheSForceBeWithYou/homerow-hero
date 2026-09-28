@@ -104,8 +104,13 @@ for _, lesson in ipairs(vim.fn.glob('lessons/*', false, true)) do
               )
             end
           end
-          -- The exercise must not simply be the solution.
-          if ex.keys ~= nil and ex.keys == sol.keys and sol.keys ~= '' then
+          -- The exercise must not simply be the solution -- except for a BUG HUNT,
+          -- where the planted mistake may live in `setup` rather than in `keys`, so
+          -- identical keys are correct by design. Whether an exercise is actually
+          -- unsolved is checked separately, and more accurately, by
+          -- tools/check-exercises-unsolved.sh, which runs them.
+          local is_bug_hunt = name:find('bug-hunt', 1, true) ~= nil
+          if not is_bug_hunt and ex.keys ~= nil and ex.keys == sol.keys and sol.keys ~= '' then
             table.insert(problems, ("%s: exercise ships the solution's keys"):format(name))
           end
         end

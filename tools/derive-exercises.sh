@@ -37,11 +37,32 @@ warn_overwrite() {
   return 0
 }
 
+# An answer line is marked with a trailing `-- <- your answer`. There are three
+# shapes, handled in order of specificity. Each rule rewrites the marker to
+# upper case so the catch-all cannot match a line an earlier rule already
+# handled; a final pass restores the lower-case marker.
+#
+#   local answer = X  -- <- your answer   keep the skeleton, blank the value
+#   return X          -- <- your answer   keep the return, blank the value
+#   keys = '...'                          blank to ''
+#   <any statement>   -- <- your answer   remove the statement entirely
+#
+# The last shape is for drills where the learner writes the call itself, e.g.
+# `vim.opt.number = true` or a whole `vim.keymap.set(...)`. Mark every line of a
+# multi-line answer.
+#
+# Such a drill has no `answer` variable, so it cannot tell "unattempted" from
+# "wrong" by itself. Put a bare `-- TODO_GUARD` comment in the solution at the
+# point the learner's code belongs; it is inert there, and here it becomes an
+# `error('DRILL_TODO')` so the drill reports TODO until the learner removes it.
 blank() {
   sed -E \
-    -e "s|^(\s*)keys = .*$|\1keys = '', -- <- your answer|" \
-    -e "s|^(\s*)local answer = .*-- <- your answer$|\1local answer = nil -- <- your answer|" \
-    -e "s|^(\s*)return .*-- <- your answer$|\1return nil -- <- your answer|" \
+    -e "s|^(\s*)local answer = .*-- <- your answer$|\1local answer = nil -- <- YOUR ANSWER|" \
+    -e "s|^(\s*)return .*-- <- your answer$|\1return nil -- <- YOUR ANSWER|" \
+    -e "s|^(\s*)keys = .*$|\1keys = '', -- <- YOUR ANSWER|" \
+    -e "s|^(\s*).*-- <- your answer$|\1-- <- YOUR ANSWER: write this line|" \
+    -e "s|^(\s*)-- TODO_GUARD$|\1error('DRILL_TODO') -- delete this line once you have written your answer|" \
+    -e "s|-- <- YOUR ANSWER|-- <- your answer|" \
     "$1"
 }
 

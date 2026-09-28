@@ -23,6 +23,7 @@ Last updated: 2026-09-28
 | `tools/use-snapshot.sh` | done — install, `--diff`, `--verify`, `--verify-all`; refuses `~/.config/nvim` |
 | `tools/derive-exercises.sh` | done — author convenience; blanks answers out of `solutions/` |
 | `tools/check-drill-specs.sh` | done — exercise and solution must pose the same problem |
+| Phase A (00–04) | **complete** |
 | CI | done — stylua, snapshot verification, all solution drills |
 | Appendix b (footguns) | in progress — entries added as lessons produce them |
 | Appendices a, c–g | — |
@@ -35,7 +36,7 @@ Last updated: 2026-09-28
 | 01 | operator-grammar | done | done | 24 | n/a |
 | 02 | text-objects | done | done | 28 | n/a |
 | 03 | marks-and-jumps | done | done | 22 | n/a |
-| 04 | first-init-lua | — | — | — | — |
+| 04 | first-init-lua | done | done | 19 | `config/04` |
 | 05 | registers | — | — | — | — |
 | 06 | insert-mode | — | — | — | n/a |
 | 07 | macros | — | — | — | n/a |
@@ -64,27 +65,37 @@ Last updated: 2026-09-28
 
 ## Notes for the next session
 
-- Next lesson to author: **04 — your first `init.lua`.** It is the first lesson
-  since 00 that changes the config, so it produces `config/04`. Phase A closes
-  there.
-- Authoring order that works: write `solutions/` first with the answer on one
-  marked line, run `./drill NN --solutions` until green, then
-  `bash tools/derive-exercises.sh NN`. BUG HUNT drills are hand-authored in
-  `exercises/` and skipped by the tool. Finish with
-  `bash tools/check-drill-specs.sh`.
-- The drill runner has now caught five wrong author expectations, every one of
-  them either whitespace or a coincidence. Verify buffer contents with `%q`, and
-  when writing a BUG HUNT **check that the wrong answer actually fails** — lesson
-  03's drill 22 first passed by accident, because the last jump happened to start
-  on the line of the last edit.
+- **Phase A is complete.** Next lesson to author: **05 — registers and the
+  clipboard**, which opens Phase B and changes the config (a `clipboard`
+  decision), so it produces `config/05`.
+- Authoring order that works:
+  1. Verify every fact headlessly first, printing buffer contents with `%q` so
+     whitespace is visible. Never write prose around an unrun command.
+  2. Write `solutions/` with the answer on a line marked `-- <- your answer`. For
+     a drill where the learner writes a whole statement, also place a bare
+     `-- TODO_GUARD` comment where their code belongs — inert in the solution,
+     it becomes `error('DRILL_TODO')` in the exercise so the drill reports TODO
+     rather than FAIL while unattempted.
+  3. `./drill NN --solutions` until green.
+  4. `bash tools/derive-exercises.sh NN`.
+  5. Hand-author BUG HUNT drills in `exercises/` (the tool skips `*bug-hunt*`),
+     and **confirm the planted mistake actually fails**.
+  6. `stylua .`, then `bash tools/check-drill-specs.sh`.
+- The drill runner has now caught six wrong author expectations. It earns its keep
+  on every lesson; do not skip step 3.
 - Corrections already folded into prose, do not reintroduce:
-  - `-u NONE` has `'expandtab'` off, so `>>` inserts a tab (01).
+  - `-u NONE` has `'expandtab'` off, so `>>` inserts a tab (01, revisited in 04).
   - `dw` / `daW` on a line's last word or WORD leave or take the *preceding*
     whitespace, since an operator only reaches forward from the cursor (01, 02).
   - Block and quote text objects **do** search forward on the line; `:h ib` says
     so. They never search backwards (02).
   - A mark follows its text when lines shift; it is cleared only when its own line
     is deleted, and reads as `{ 0, 0 }` from Lua afterwards (03).
-  - `:25` is not a jump command but `25G` is, verified through both typed keys and
-    `vim.cmd`. `:s` and `:tag` *are* jumps, so "Ex commands are never jumps" is
-    the wrong generalization (03).
+  - `:25` is not a jump command but `25G` is. `:s` and `:tag` *are*, so "Ex
+    commands are never jumps" is the wrong generalization (03).
+  - **`nvim -l` does not read the user config** — `:h initialization` says `-l`
+    skips everything up to step 8. Probe a config with `-c 'lua …' -c qa`, never
+    with `-l`. This is why `tools/use-snapshot.sh --verify` uses `-c`.
+- Deliberately not used before its lesson: `CmdlineEnter` would have proved lesson
+  04's missing-`<CR>` behaviour directly, but autocommands are lesson 24, so that
+  drill asserts on the rhs instead and the behaviour is a BUG HUNT.
