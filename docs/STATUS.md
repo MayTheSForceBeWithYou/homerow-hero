@@ -40,7 +40,7 @@ Last updated: 2026-09-28
 | 05 | registers | done | done | 18 | `config/05` |
 | 06 | insert-mode | done | done | 20 | n/a |
 | 07 | macros | done | done | 18 | n/a |
-| 08 | ex-ranges-substitute | — | — | — | n/a |
+| 08 | ex-ranges-substitute | done | done | 24 | n/a |
 | 09 | global-and-normal | — | — | — | n/a |
 | 10 | buffers-windows-tabs | — | — | — | — |
 | 11 | search-and-quickfix | — | — | — | — |
