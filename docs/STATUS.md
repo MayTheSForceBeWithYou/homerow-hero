@@ -37,7 +37,7 @@ Last updated: 2026-09-28
 | 02 | text-objects | done | done | 28 | n/a |
 | 03 | marks-and-jumps | done | done | 22 | n/a |
 | 04 | first-init-lua | done | done | 19 | `config/04` |
-| 05 | registers | — | — | — | — |
+| 05 | registers | done | done | 18 | `config/05` |
 | 06 | insert-mode | — | — | — | n/a |
 | 07 | macros | — | — | — | n/a |
 | 08 | ex-ranges-substitute | — | — | — | n/a |
