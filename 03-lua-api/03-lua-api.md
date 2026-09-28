@@ -12,7 +12,8 @@ This lesson is intentionally short scaffolding. It will grow into full
 
 This is the lesson the whole repo was built for: answering "which buffer am I
 in, what kind is it, and has it changed?" The `should_save` predicate in the
-smoke snippet is the exact guard the capstone uses before compiling.
+smoke snippet is the exact guard the capstone uses before running external
+commands.
 
 ## Exercises (help-driven)
 

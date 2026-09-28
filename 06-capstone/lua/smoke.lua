@@ -1,4 +1,4 @@
--- Lesson 06 (capstone): save-before-compile.
+-- Lesson 06 (capstone): save-if-modified before running external commands.
 -- Saves the current buffer first, but only when it is a normal file buffer
 -- with unsaved changes. Returns true when a write happened.
 local M = {}

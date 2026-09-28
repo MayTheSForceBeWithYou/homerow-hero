@@ -1,6 +1,7 @@
 # homerow-hero
 
-A self-study repo for experienced engineers to learn Vim/Neovim deeply, with emphasis on Vimscript and Neovim's Lua API.
+A self-study curriculum for learning Neovim configuration: Vimscript + Lua,
+keymaps, functions, and fast docs discovery (`:help`).
 
 ## Curriculum roadmap
 
@@ -10,7 +11,8 @@ A self-study repo for experienced engineers to learn Vim/Neovim deeply, with emp
 - `03-lua-api/` — `vim.api`, `vim.fn`, `vim.opt`, `vim.bo`/`vim.wo`, keymaps, commands, autocmds, object model
 - `04-docs-navigation/` — practical `:help` indexing, `:helpgrep`, Vim concept ↔ Lua API mapping
 - `05-lsp-builtin/` — Neovim 0.12 built-in LSP: `vim.lsp.config` / `vim.lsp.enable`, diagnostics, completion, formatting
-- `06-capstone/` — save-before-compile workflow for MSVC `cl.exe`, buffer guards, quickfix integration
+- `06-capstone/` — keymap → function → save-if-modified → external command →
+  quickfix (bring your own compiler/tool)
 - `cheatsheets/` — one-page references
 - `tests/` — headless verification scripts (one per lesson)
 
@@ -27,7 +29,8 @@ CI is the source of truth:
 3. Load every `*.lua` snippet headlessly with `nvim --headless -u NONE` and fail on errors.
 4. Execute lesson verification scripts in `tests/`.
 
-Verification runs on both `ubuntu-latest` and `windows-latest`, since the capstone targets MSVC `cl.exe` on Windows.
+Verification runs on both `ubuntu-latest` and `windows-latest` so workflow
+examples remain portable across toolchains and shells.
 
 ## License
 

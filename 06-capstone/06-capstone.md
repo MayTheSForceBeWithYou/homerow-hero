@@ -1,7 +1,8 @@
-# 06-capstone — save-before-compile for MSVC cl.exe
+# 06-capstone — save-if-modified before external commands
 
-This lesson is intentionally short scaffolding. It will grow into async
-`cl.exe` invocation with quickfix integration later.
+This lesson is intentionally short scaffolding. It will grow into the full
+capstone pattern: keymap → function → save-if-modified → external command →
+quickfix integration.
 
 ## Runnable snippets
 
@@ -11,7 +12,8 @@ This lesson is intentionally short scaffolding. It will grow into async
 ## Why this exists
 
 The motivating workflow: one keymap that saves the current file — but only
-when it is a normal file buffer with unsaved changes — before compiling.
+when it is a normal file buffer with unsaved changes — before running an
+external command.
 `save_if_modified()` is that keymap's core; the test proves it against real
 buffers, including a real file on disk.
 
@@ -31,5 +33,7 @@ it is the explicit statement of intent, and it also covers special buftypes
    denylist (e.g. `qf`, `help`). Write the test first.
 2. Find `:h :write` and `:h ++p` — how would you preserve file permissions
    or encoding on save?
-3. Sketch the next step: running `cl.exe` via `vim.system()` and feeding
-   errors to the quickfix list (`:h vim.system`, `:h quickfix`).
+3. Sketch the next step: running a build command via `vim.system()` and
+   feeding output to the quickfix list (`:h vim.system`, `:h quickfix`).
+   Example commands: `gcc % -o %<`, `cl.exe /nologo %`, or a trivial `echo`
+   command while bootstrapping.
