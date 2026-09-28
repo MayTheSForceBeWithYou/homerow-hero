@@ -28,8 +28,10 @@ assert(
   'test setup broken: Vim call counter should start empty'
 )
 
-vim.cmd([[normal \hh]])
-vim.cmd([[normal \hv]])
+local lhs_lua = vim.api.nvim_replace_termcodes('<leader>hh', true, false, true)
+local lhs_vim = vim.api.nvim_replace_termcodes('<leader>hv', true, false, true)
+vim.fn.feedkeys(lhs_lua, 'mx')
+vim.fn.feedkeys(lhs_vim, 'mx')
 
 assert(vim.g.homerow_hero_navigation_lua_calls == 1, 'Lua keymap did not call its function')
 assert(vim.g.homerow_hero_navigation_vim_calls == 1, 'Vimscript keymap did not call its function')
