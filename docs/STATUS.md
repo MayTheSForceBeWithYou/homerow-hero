@@ -38,7 +38,7 @@ Last updated: 2026-09-28
 | 03 | marks-and-jumps | done | done | 22 | n/a |
 | 04 | first-init-lua | done | done | 19 | `config/04` |
 | 05 | registers | done | done | 18 | `config/05` |
-| 06 | insert-mode | — | — | — | n/a |
+| 06 | insert-mode | done | done | 20 | n/a |
 | 07 | macros | — | — | — | n/a |
 | 08 | ex-ranges-substitute | — | — | — | n/a |
 | 09 | global-and-normal | — | — | — | n/a |
