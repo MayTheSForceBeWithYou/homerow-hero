@@ -45,6 +45,12 @@ jobs:
       - name: Every config snapshot starts cleanly
         run: bash tools/use-snapshot.sh --verify-all
 
+      - name: Exercises and solutions pose the same problem
+        # Guards the real drift risk in a paired tree: a solution's `want` edited
+        # without its exercise's, which hands the learner an unsolvable drill while
+        # the reference answer still passes.
+        run: bash tools/check-drill-specs.sh
+
       - name: Every reference drill passes
         # The real check on the course's correctness: a solution that does not
         # pass is a bug in the lesson, not in the learner.

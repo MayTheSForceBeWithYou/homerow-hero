@@ -4,7 +4,7 @@ What is actually written. Read this at the start of a session, then verify it
 against the filesystem — `DESIGN.md` §8 and `CLAUDE.md` both require that the two
 agree.
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 ## Legend
 
@@ -21,6 +21,8 @@ Last updated: 2026-09-27
 | `CLAUDE.md` | done |
 | `tools/drill.lua` + `./drill` | done — keys / value / check drills, all exercised |
 | `tools/use-snapshot.sh` | done — install, `--diff`, `--verify`, `--verify-all`; refuses `~/.config/nvim` |
+| `tools/derive-exercises.sh` | done — author convenience; blanks answers out of `solutions/` |
+| `tools/check-drill-specs.sh` | done — exercise and solution must pose the same problem |
 | CI | done — stylua, snapshot verification, all solution drills |
 | Appendix b (footguns) | in progress — entries added as lessons produce them |
 | Appendices a, c–g | — |
@@ -32,7 +34,7 @@ Last updated: 2026-09-27
 | 00 | second-config | done | done | 15 | `config/00` |
 | 01 | operator-grammar | done | done | 24 | n/a |
 | 02 | text-objects | done | done | 28 | n/a |
-| 03 | marks-and-jumps | — | — | — | n/a |
+| 03 | marks-and-jumps | done | done | 22 | n/a |
 | 04 | first-init-lua | — | — | — | — |
 | 05 | registers | — | — | — | — |
 | 06 | insert-mode | — | — | — | n/a |
@@ -62,17 +64,27 @@ Last updated: 2026-09-27
 
 ## Notes for the next session
 
-- Next lesson to author: **03 — marks and jumps.** It completes Phase A's editor
-  half; lesson 04 then opens `init.lua` and the first config snapshot since 00.
-- Lessons 01–03 have no config snapshot by design. The next snapshot is `config/04`.
-- The drill runner has now caught three wrong author expectations. Keep verifying
-  buffer contents with `%q` rather than by eye, because every one of them was
-  whitespace:
-  - under `-u NONE` `'expandtab'` is off, so `>>` inserts a tab, not spaces (01);
-  - `dw` on a line's last word leaves the *preceding* space, since an operator
-    only reaches text from the cursor forward (01);
-  - `daW` on the last WORD of a line takes the *leading* whitespace for the same
-    reason, so `diW` is the object for a punctuation contrast (02).
-- Lesson 02 corrected a belief worth not re-introducing: block and quote objects
-  **do** search forward on the line when the cursor is not already inside one.
-  `:h ib` states it outright. The search never goes backwards.
+- Next lesson to author: **04 — your first `init.lua`.** It is the first lesson
+  since 00 that changes the config, so it produces `config/04`. Phase A closes
+  there.
+- Authoring order that works: write `solutions/` first with the answer on one
+  marked line, run `./drill NN --solutions` until green, then
+  `bash tools/derive-exercises.sh NN`. BUG HUNT drills are hand-authored in
+  `exercises/` and skipped by the tool. Finish with
+  `bash tools/check-drill-specs.sh`.
+- The drill runner has now caught five wrong author expectations, every one of
+  them either whitespace or a coincidence. Verify buffer contents with `%q`, and
+  when writing a BUG HUNT **check that the wrong answer actually fails** — lesson
+  03's drill 22 first passed by accident, because the last jump happened to start
+  on the line of the last edit.
+- Corrections already folded into prose, do not reintroduce:
+  - `-u NONE` has `'expandtab'` off, so `>>` inserts a tab (01).
+  - `dw` / `daW` on a line's last word or WORD leave or take the *preceding*
+    whitespace, since an operator only reaches forward from the cursor (01, 02).
+  - Block and quote text objects **do** search forward on the line; `:h ib` says
+    so. They never search backwards (02).
+  - A mark follows its text when lines shift; it is cleared only when its own line
+    is deleted, and reads as `{ 0, 0 }` from Lua afterwards (03).
+  - `:25` is not a jump command but `25G` is, verified through both typed keys and
+    `vim.cmd`. `:s` and `:tag` *are* jumps, so "Ex commands are never jumps" is
+    the wrong generalization (03).
