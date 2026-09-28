@@ -31,7 +31,7 @@ Last updated: 2026-09-27
 |---|------|--------|------|--------|----------|
 | 00 | second-config | done | done | 15 | `config/00` |
 | 01 | operator-grammar | done | done | 24 | n/a |
-| 02 | text-objects | — | — | — | n/a |
+| 02 | text-objects | done | done | 28 | n/a |
 | 03 | marks-and-jumps | — | — | — | n/a |
 | 04 | first-init-lua | — | — | — | — |
 | 05 | registers | — | — | — | — |
@@ -62,12 +62,17 @@ Last updated: 2026-09-27
 
 ## Notes for the next session
 
-- Next lesson to author: **02 — text objects.** It is the natural pair to 01, and
-  lesson 01's drill 24 and the `daw` aside in its prose both point forward to it.
-- Lesson 01 has no config snapshot by design; the first snapshot after `config/00`
-  is lesson 04.
-- Two facts were corrected during authoring by the drill runner catching the
-  author's own wrong expectations, both now in the lesson prose: under `-u NONE`
-  `'expandtab'` is off so `>>` inserts a tab, not spaces; and `dw` on a line's
-  last word leaves the *preceding* space, because an operator only reaches text
-  from the cursor forward. Keep verifying whitespace with `%q`, not by eye.
+- Next lesson to author: **03 — marks and jumps.** It completes Phase A's editor
+  half; lesson 04 then opens `init.lua` and the first config snapshot since 00.
+- Lessons 01–03 have no config snapshot by design. The next snapshot is `config/04`.
+- The drill runner has now caught three wrong author expectations. Keep verifying
+  buffer contents with `%q` rather than by eye, because every one of them was
+  whitespace:
+  - under `-u NONE` `'expandtab'` is off, so `>>` inserts a tab, not spaces (01);
+  - `dw` on a line's last word leaves the *preceding* space, since an operator
+    only reaches text from the cursor forward (01);
+  - `daW` on the last WORD of a line takes the *leading* whitespace for the same
+    reason, so `diW` is the object for a punctuation contrast (02).
+- Lesson 02 corrected a belief worth not re-introducing: block and quote objects
+  **do** search forward on the line when the cursor is not already inside one.
+  `:h ib` states it outright. The search never goes backwards.
