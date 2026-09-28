@@ -77,6 +77,12 @@ jobs:
         # pass is a bug in the lesson, not in the learner.
         run: ./drill --all-solutions
 
+      - name: Reference drills pass in reverse order too
+        # Drills share one Neovim session, so a drill that leaks global state can
+        # make a later one pass or fail by accident. Running the suite backwards
+        # catches order dependence that the forward run hides.
+        run: ./drill $(ls -d lessons/*/solutions | tac | tr '\n' ' ')
+
       - name: No exercise drill is silently self-passing
         # An exercise whose answer is blank must report TODO or FAIL, never PASS.
         # A drill that passes unattempted is checking nothing (DESIGN.md §7).

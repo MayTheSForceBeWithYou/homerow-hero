@@ -39,6 +39,81 @@ local function say(fmt, ...)
 end
 
 ---------------------------------------------------------------------------
+-- drill isolation
+---------------------------------------------------------------------------
+
+-- Drills run in ONE Neovim session, so anything global that a drill changes is
+-- visible to every drill after it. That is not hypothetical: lesson 04's drills
+-- set 'expandtab' and 'shiftwidth', which silently broke a lesson 06 drill that
+-- expected the `-u NONE` defaults -- but only when the whole suite ran, never when
+-- lesson 06 ran alone. That failure mode is far too quiet to leave to authors
+-- remembering, so the runner restores global options itself.
+--
+-- Buffer- and window-local options need no help: every keys drill gets a fresh
+-- scratch buffer.
+local baseline_options = {}
+
+-- Every option is snapshotted at `scope = 'global'`, not just the ones whose scope
+-- IS global. 'expandtab' and 'shiftwidth' are buffer-scoped, but they have a global
+-- default that each new buffer inherits -- and `vim.opt.expandtab = true` sets that
+-- default. Reading them with no scope argument returns the *current buffer's* value,
+-- which is why an earlier attempt at this restored nothing useful.
+local function snapshot_options()
+  for name in pairs(vim.api.nvim_get_all_options_info()) do
+    local ok, value = pcall(vim.api.nvim_get_option_value, name, { scope = 'global' })
+    if ok then
+      baseline_options[name] = value
+    end
+  end
+end
+
+local function restore_options()
+  for name, want in pairs(baseline_options) do
+    local ok, got = pcall(vim.api.nvim_get_option_value, name, { scope = 'global' })
+    if ok and got ~= want then
+      pcall(vim.api.nvim_set_option_value, name, want, { scope = 'global' })
+    end
+  end
+end
+
+-- Registers, marks and mapleader are global too. A drill that *reads* one is
+-- expected to seed it in `setup` (AUTHORING.md says so), but resetting the
+-- writable registers here removes a whole class of order-dependent passes.
+local function reset_registers()
+  for _, name in ipairs({
+    '"',
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '-',
+    '/',
+    'a',
+    'q',
+    'r',
+    's',
+    't',
+    'w',
+    'z',
+  }) do
+    pcall(vim.fn.setreg, name, '')
+  end
+end
+
+local function isolate()
+  restore_options()
+  reset_registers()
+  vim.g.mapleader = nil
+  vim.g.maplocalleader = nil
+end
+
+---------------------------------------------------------------------------
 -- comparison helpers
 ---------------------------------------------------------------------------
 
@@ -283,6 +358,8 @@ if #args == 0 then
   os.exit(2)
 end
 
+snapshot_options()
+
 local files = expand_targets(args)
 if #files == 0 then
   say('%sno .lua drills found in: %s%s', YELLOW, table.concat(args, ' '), RESET)
@@ -294,6 +371,7 @@ local failures = {}
 
 for _, path in ipairs(files) do
   local name = vim.fn.fnamemodify(path, ':t:r')
+  isolate()
   local drill, load_err = load_drill(path)
 
   if not drill then

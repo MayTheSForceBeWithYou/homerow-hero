@@ -191,6 +191,35 @@ return {
 
 Raise an error containing `DRILL_TODO` to report TODO instead of FAIL.
 
+### What the runner isolates for you, and what it does not
+
+All drills run in **one** Neovim session, so global state leaks forward. The runner
+resets the worst of it before every drill:
+
+- **every option**, snapshotted at `scope = 'global'`. Note the scope: `expandtab`
+  and `shiftwidth` are *buffer*-scoped but have a global default that new buffers
+  inherit, and `vim.opt.expandtab = true` sets that default.
+- **the writable registers** it can name, including the unnamed, numbered, small
+  delete and the letters drills use.
+- **`mapleader` and `maplocalleader`.**
+
+A `keys` drill also gets a fresh scratch buffer, so buffer- and window-local options
+need no help.
+
+What it does **not** reset: marks (including global `A`–`Z`), the jumplist and
+changelist, autocommands, user commands, and keymaps you install outside `setup`. If
+a drill depends on any of those, seed it in `setup`.
+
+This exists because the failure mode is far too quiet to leave to authors
+remembering. Lesson 04's drills set `expandtab`, which broke a lesson 06 drill that
+expected the `-u NONE` default — and only when the whole suite ran, never when lesson
+06 ran alone. Verify order-independence when you add a lesson:
+
+```bash
+./drill --all-solutions                                  # forward
+./drill $(ls -d lessons/*/solutions | tac | tr '\n' ' ')  # reverse
+```
+
 ### Rules for drills
 
 - **Drills verify one idea.** If a failure could have two causes, split it.
