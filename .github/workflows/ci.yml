@@ -9,41 +9,48 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    defaults:
-      run:
-        shell: bash
+    # The course targets WSL2/Arch with Neovim 0.12 (DESIGN.md §1). Linux only:
+    # the previous windows-latest matrix leg was aspirational and nothing in the
+    # course is Windows-specific, while `./drill` and use-snapshot.sh are bash.
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Neovim nightly
-        # Pinned to the v1 tag's commit; re-pin deliberately, never float.
+      - name: Setup Neovim
+        # Pinned deliberately. The course teaches 0.12 APIs and transcribes real
+        # output; floating on nightly would silently invalidate lesson prose.
         uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1
         with:
           neovim: true
-          version: nightly
+          version: v0.12.5
 
       - name: Setup stylua
         uses: JohnnyMorganz/stylua-action@v4
         with:
           version: 0.20.0
           token: ${{ secrets.GITHUB_TOKEN }}
-          # Install only; the real check runs in the next step.
+          # Install only; the real check is a separate step so its failure is legible.
           args: --version
 
-      - name: Check Neovim version
+      - name: Report Neovim version
         run: nvim --version
 
-      - name: Run stylua
+      - name: Formatting (stylua)
         run: stylua --check .
 
-      - name: Load all Lua snippets headlessly
-        run: bash tests/load_all_lua.sh
+      - name: Every cited :help tag resolves
+        run: bash tools/check-help-tags.sh
 
-      - name: Run lesson verification scripts
-        run: bash tests/run_headless_tests.sh
+      - name: Every config snapshot starts cleanly
+        run: bash tools/use-snapshot.sh --verify-all
+
+      - name: Every reference drill passes
+        # The real check on the course's correctness: a solution that does not
+        # pass is a bug in the lesson, not in the learner.
+        run: ./drill --all-solutions
+
+      - name: No exercise drill is silently self-passing
+        # An exercise whose answer is blank must report TODO or FAIL, never PASS.
+        # A drill that passes unattempted is checking nothing (DESIGN.md §7).
+        run: bash tools/check-exercises-unsolved.sh

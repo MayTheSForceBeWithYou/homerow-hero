@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# ./drill -- run homerow-hero drills.
+#
+#   ./drill 01                 your answers for lesson 01
+#   ./drill 01 --solutions     the reference answers (should be all PASS)
+#   ./drill 01/04              one drill, by lesson and number
+#   ./drill --all              every lesson's exercises
+#   ./drill --all-solutions    every reference answer -- what CI runs
+#
+# Neovim writes editor messages ("recording @q", a typed :%s/...) to stderr
+# while the runner writes its report to stdout, so stderr is held back and
+# shown only when it contains a real error.
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+
+if ! command -v nvim >/dev/null 2>&1; then
+  echo "drill: nvim is not on PATH" >&2
+  exit 127
+fi
+
+usage() { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; }
+
+# --- pass 1: flags -----------------------------------------------------------
+want_solutions=0
+specs=()
+paths=()
+
+for arg in "$@"; do
+  case "$arg" in
+    --solutions|-s)  want_solutions=1 ;;
+    --all)           paths+=(lessons/*/exercises) ;;
+    --all-solutions) paths+=(lessons/*/solutions) ;;
+    -h|--help)       usage; exit 0 ;;
+    -*)              echo "drill: unknown flag $arg" >&2; usage >&2; exit 2 ;;
+    *)               specs+=("$arg") ;;
+  esac
+done
+
+# --- pass 2: specs, now that --solutions is known ----------------------------
+sub=exercises
+(( want_solutions )) && sub=solutions
+
+for spec in "${specs[@]+"${specs[@]}"}"; do
+  # A real path wins over number parsing, so tab-completion keeps working.
+  if [[ -e "$spec" ]]; then
+    paths+=("$spec")
+    continue
+  fi
+
+  lesson="${spec%%/*}"
+  drill_no=""
+  [[ "$spec" == */* ]] && drill_no="${spec#*/}"
+
+  if [[ ! "$lesson" =~ ^[0-9]{1,2}$ ]]; then
+    echo "drill: don't know what '$spec' means -- expected a lesson number like 04, 04/11, or a path" >&2
+    exit 2
+  fi
+  printf -v lesson '%02d' "$((10#$lesson))"
+
+  lesson_dir=$(compgen -G "lessons/${lesson}-*" | head -n1 || true)
+  if [[ -z "$lesson_dir" ]]; then
+    echo "drill: no lesson ${lesson} -- lessons present:" >&2
+    ls -1 lessons 2>/dev/null | sed 's/^/  /' >&2
+    exit 2
+  fi
+  if [[ ! -d "$lesson_dir/$sub" ]]; then
+    echo "drill: ${lesson_dir} has no ${sub}/ yet" >&2
+    exit 2
+  fi
+
+  if [[ -n "$drill_no" ]]; then
+    printf -v drill_no '%02d' "$((10#$drill_no))"
+    mapfile -t matches < <(compgen -G "${lesson_dir}/${sub}/${drill_no}-*.lua" || true)
+    if [[ ${#matches[@]} -eq 0 ]]; then
+      echo "drill: ${lesson_dir}/${sub}/ has no drill ${drill_no}" >&2
+      exit 2
+    fi
+    paths+=("${matches[@]}")
+  else
+    paths+=("$lesson_dir/$sub")
+  fi
+done
+
+if [[ ${#paths[@]} -eq 0 ]]; then
+  echo "drill: nothing to run." >&2
+  usage >&2
+  exit 2
+fi
+
+# Glob patterns that matched nothing survive literally; drop them.
+present=()
+for p in "${paths[@]}"; do
+  [[ -e "$p" ]] && present+=("$p")
+done
+if [[ ${#present[@]} -eq 0 ]]; then
+  echo "drill: none of those paths exist yet." >&2
+  exit 2
+fi
+
+stderr_log="$(mktemp)"
+trap 'rm -f "$stderr_log"' EXIT
+
+nvim --headless -u NONE -l tools/drill.lua "${present[@]}" 2>"$stderr_log"
+status=$?
+
+# Neovim's chatter is expected; a Lua traceback or E-code is not.
+if grep -qE 'E[0-9]{3,4}:|stack traceback' "$stderr_log"; then
+  { echo; echo "--- neovim stderr ---"; cat "$stderr_log"; } >&2
+fi
+
+exit $status
