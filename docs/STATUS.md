@@ -43,7 +43,7 @@ Last updated: 2026-09-28
 | 07 | macros | done | done | 18 | n/a |
 | 08 | ex-ranges-substitute | done | done | 24 | n/a |
 | 09 | global-and-normal | done | done | 21 | n/a |
-| 10 | buffers-windows-tabs | — | — | — | — |
+| 10 | buffers-windows-tabs | done | done | 18 | `config/10` |
 | 11 | search-and-quickfix | — | — | — | — |
 | 12 | help-as-a-database | — | — | — | n/a |
 | 13 | lua-in-neovim | — | — | — | n/a |

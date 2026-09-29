@@ -183,6 +183,29 @@ return {
 }
 ```
 
+### Marking the answer, for `tools/derive-exercises.sh`
+
+Exercises are generated from solutions by blanking the answer, so a drill's `goal`,
+`start` and `want` cannot drift from the answer that satisfies them. Mark the answer
+in one of four ways:
+
+| In the solution | Becomes in the exercise |
+|---|---|
+| `keys = '...'` | `keys = '',` |
+| `local answer = X -- <- your answer` | `local answer = nil -- <- your answer` |
+| `return X -- <- your answer` | `return nil -- <- your answer` |
+| any statement + `-- <- your answer` | the statement is removed |
+| `-- ANSWER_BEGIN` … `-- ANSWER_END` | the whole block becomes `local answer = nil` |
+
+**Prefer the block form for anything longer than one line.** A table literal or a
+multi-statement answer needs it, and so does anything stylua might wrap — a line-end
+marker left on a wrapped fragment silently produces a broken exercise.
+
+A `check` drill with no `answer` variable cannot tell "unattempted" from "wrong", so
+also place a bare `-- TODO_GUARD` comment where the learner's code belongs. It is an
+inert comment in the solution and becomes `error('DRILL_TODO')` in the exercise, so
+the drill reports TODO until the learner deletes it.
+
 ### `check` drills — free-form assertions
 
 | Field | Meaning |

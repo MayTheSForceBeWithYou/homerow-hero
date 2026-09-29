@@ -56,14 +56,27 @@ warn_overwrite() {
 # point the learner's code belongs; it is inert there, and here it becomes an
 # `error('DRILL_TODO')` so the drill reports TODO until the learner removes it.
 blank() {
-  sed -E \
+  # Pass 1 (awk): replace a marked BLOCK with one blanked line, keeping the opening
+  # marker's indentation.
+  # Pass 2 (sed): the single-line forms, most specific first. Each rewrites the marker
+  # to upper case so the catch-all cannot re-match a line an earlier rule handled; a
+  # final substitution restores the lower-case marker.
+  awk '
+    /^[[:space:]]*-- ANSWER_BEGIN[[:space:]]*$/ {
+      match($0, /^[[:space:]]*/)
+      printf "%slocal answer = nil -- <- your answer\n", substr($0, 1, RLENGTH)
+      skipping = 1
+      next
+    }
+    /^[[:space:]]*-- ANSWER_END[[:space:]]*$/ { skipping = 0; next }
+    !skipping { print }
+  ' "$1" | sed -E \
     -e "s|^(\s*)local answer = .*-- <- your answer$|\1local answer = nil -- <- YOUR ANSWER|" \
     -e "s|^(\s*)return .*-- <- your answer$|\1return nil -- <- YOUR ANSWER|" \
     -e "s|^(\s*)keys = .*$|\1keys = '', -- <- YOUR ANSWER|" \
     -e "s|^(\s*).*-- <- your answer$|\1-- <- YOUR ANSWER: write this line|" \
     -e "s|^(\s*)-- TODO_GUARD$|\1error('DRILL_TODO') -- delete this line once you have written your answer|" \
-    -e "s|-- <- YOUR ANSWER|-- <- your answer|" \
-    "$1"
+    -e "s|-- <- YOUR ANSWER|-- <- your answer|"
 }
 
 for spec in "$@"; do
