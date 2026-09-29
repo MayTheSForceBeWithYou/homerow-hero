@@ -75,24 +75,36 @@ pairs  -> 1=1 2=2 4=4 5=5          found everything
 So `ipairs` is for a list you believe is dense, and `pairs` is for everything else. If
 `ipairs` is silently processing two of your five entries, you have a hole.
 
-### `pairs` order is not insertion order
+### `pairs` order is unspecified — and that is worse than "wrong"
 
-The second trap. Inserting eight keys one at a time and then iterating:
+The second trap, and the measurement is more interesting than the usual telling.
+
+Running the *same* program three times, inserting eight keys one at a time and then
+iterating:
 
 ```
-inserted : one two three four five six seven eight
-iterated : eight one two three four five six seven
+session 1   inserted: one two three four five six seven eight
+            iterated: one two three four five six seven eight     matches
+session 2   iterated: one two three four five six seven eight     matches
+session 3   iterated: eight one two three four five six seven     does not
 ```
 
-And from a literal:
+Within a single session the order is **stable** — iterating the same table three times in
+one process gave identical results every time. Across sessions it **varies**, because
+LuaJIT seeds its string hashing per process.
+
+So the danger is not that `pairs` order is wrong. It is that it is often *right*, and then
+one day is not. A config that iterates a map and depends on the order works for weeks and
+then breaks on a restart, with nothing changed. That is a far worse failure than one that
+breaks immediately.
+
+From a literal, in one session:
 
 ```
 { zebra = 1, apple = 2, mango = 3 }  ->  iterated: apple mango zebra
 ```
 
-Not insertion order, not sorted order, not reverse order — **unspecified** order, which
-happens to be the hash layout. It is stable within one run and you must not rely on it
-across runs or versions.
+Treat the order as unspecified, because it is.
 
 To iterate a map predictably you sort the keys yourself:
 
@@ -108,12 +120,13 @@ Measured: that gives `apple mango zebra` reliably.
 
 The **list** half does iterate in order, which is the entire reason `ipairs` exists.
 
-**The wrong reading to reject.** Having seen one iteration come out looking sensible,
+**The wrong reading to reject.** Having seen an iteration come out in insertion order,
 the natural conclusion is that Lua "mostly" preserves order and that sorting is
-belt-and-braces. It does not: the eight-key measurement above put the *last* inserted
-key first. Where order is visible to a user — a list of keymaps you print, options you
-apply in sequence — sort it or use a list. Where it is not visible, do not spend the
-sort.
+belt-and-braces. Two of the three sessions above *did* come out in insertion order — and
+that is the trap, not the reassurance. Relying on behaviour that is usually right is how
+you get a bug that appears months later on a machine you cannot reproduce. Where order is
+visible to anyone — a list of keymaps you print, options you apply in sequence — sort it
+or use a list. Where it is not visible, do not spend the sort.
 
 ## Tables are references
 
@@ -231,7 +244,7 @@ code. The fix is the one above: build a new table and never write into `defaults
 | `#t` / `vim.tbl_count(t)` | the list part only / every key |
 | `#t` with holes / without | **unspecified** / the length |
 | `ipairs` / `pairs` | dense list, stops at the first `nil` / every key |
-| `pairs` order / insertion order | unspecified — measured to differ |
+| `pairs` order / insertion order | unspecified: stable per session, varies between them, and sometimes identical |
 | `a = b` / `vim.deepcopy(b)` | another name for the same table / an independent one |
 | `a == b` / same contents | identity / not compared |
 | `tbl_extend` / `tbl_deep_extend` | replaces nested tables / merges them |
@@ -283,7 +296,8 @@ Every argument must be a table. `opts or {}` is the idiom for an optional parame
 1. For `{ 'a', 'b', name = 'x', [9] = 'y' }`, what is `#t` and why?
 2. What does `#t` return for a table with a `nil` in the middle?
 3. Give the two things `ipairs` does that `pairs` does not.
-4. Is `pairs` order the insertion order? What did the measurement show?
+4. Is `pairs` order the insertion order? What did the three-session measurement show,
+   and why is that result worse than a consistent mismatch?
 5. How do you iterate a map in a predictable order?
 6. `a = { 1 }; b = a; b[1] = 2`. What is `a[1]`, and why?
 7. Is `{ 1 } == { 1 }` true?
@@ -298,7 +312,9 @@ Every argument must be a table. `opts or {}` is the idiom for an optional parame
 2. Unspecified. Any boundary is a legal answer — the measurement gave 5, and 2 would
    also have been correct.
 3. It visits only consecutive integer keys from 1, and it stops at the first `nil`.
-4. No. Eight keys inserted `one`…`eight` iterated as `eight one two … seven`.
+4. It is unspecified. Two of three sessions matched insertion order exactly and the
+   third did not — stable within a session, varying between them. That is worse than a
+   consistent mismatch, because code relying on it works until it suddenly does not.
 5. Collect the keys with `vim.tbl_keys`, `table.sort` them, then `ipairs` the sorted
    list.
 6. `2`. Assignment copies a reference, so `a` and `b` name the same table.
@@ -322,8 +338,9 @@ Every argument must be a table. `opts or {}` is the idiom for an optional parame
   `table.remove` shifts, `t[i] = nil` does not.
 - `ipairs` stops at the first `nil`; `pairs` sees every key. If a loop is doing less
   than you expect, look for a hole.
-- `pairs` order is unspecified and measured to differ from insertion order. Sort the
-  keys when the order is visible to anyone.
+- `pairs` order is stable within a session and varies between them. It is often
+  *identical* to insertion order, which is what makes relying on it dangerous rather than
+  merely wrong. Sort the keys when the order is visible to anyone.
 - Assignment copies a reference, and `==` compares identity. A shallow copy shares
   nested tables; `vim.deepcopy` does not.
 - `'force'` and `'keep'` are the vocabulary of option merging, and `tbl_deep_extend` is

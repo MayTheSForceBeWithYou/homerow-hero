@@ -203,9 +203,18 @@ marker left on a wrapped fragment silently produces a broken exercise.
 
 But the block form always produces `local answer = nil`, so use it only when the answer
 *is a value*. When the answer is a **statement** whose effect the check asserts on — a
-`vim.cmd(…)` the learner must write — use the line form and add a `-- TODO_GUARD`
-above it. Otherwise the exercise reports FAIL rather than TODO while unattempted, and
-an unattempted drill should never look broken.
+`vim.cmd(…)` or a `dofile(…)` the learner must write — use the line form and add a
+`-- TODO_GUARD` above it. Otherwise the exercise reports FAIL rather than TODO while
+unattempted, and an unattempted drill should never look broken.
+
+This mistake has been made three times (lessons 11, 14 and 16), so
+`tools/check-exercises-unsolved.sh` now enforces it: **every non-`bug-hunt` exercise must
+report TODO, never FAIL.** A FAIL there is almost always a statement answer marked with a
+block.
+
+The block need not assign a variable literally named `answer` — it may define whatever the
+check guards on (`local source`, `local relative_path`) as long as blanking it makes that
+guard fire.
 
 A `check` drill with no `answer` variable cannot tell "unattempted" from "wrong", so
 also place a bare `-- TODO_GUARD` comment where the learner's code belongs. It is an
@@ -247,6 +256,26 @@ expected the `-u NONE` default — and only when the whole suite ran, never when
 ```bash
 ./drill --all-solutions                                  # forward
 ./drill $(ls -d lessons/*/solutions | tac | tr '\n' ' ')  # reverse
+```
+
+### A drill must be deterministic
+
+A drill that passes most of the time is worse than no drill: it erodes trust in the
+suite and its failures look like the learner's fault.
+
+The real case that caught this: lesson 14's `pairs`-order drill asserted that iteration
+order differs from insertion order. Measured over twenty runs it failed 2 of 20, because
+LuaJIT seeds string hashing **per process** — so the order is stable within a session and
+varies between them, and sometimes coincides with insertion order exactly. The fix was to
+assert what is reliable (two iterations in one session agree) and leave the
+across-session claim to prose backed by a three-session measurement.
+
+Sources of nondeterminism to watch for: hash iteration order, timestamps, `tempname()`
+collisions, anything reading the real environment, and anything depending on how fast the
+machine is. When in doubt, run the drill thirty times:
+
+```bash
+for i in $(seq 1 30); do ./drill lessons/NN-slug/solutions/06-x.lua >/dev/null 2>&1 || echo FLAKE; done
 ```
 
 ### Rules for drills

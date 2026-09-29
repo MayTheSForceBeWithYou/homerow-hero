@@ -50,7 +50,7 @@ Last updated: 2026-09-28
 | 13 | lua-in-neovim | done | done | 20 | n/a |
 | 14 | tables | done | done | 20 | n/a |
 | 15 | functions-and-closures | done | done | 20 | n/a |
-| 16 | modules-and-runtimepath | — | — | — | — |
+| 16 | modules-and-runtimepath | done | done | 18 | `config/16` |
 | 17 | errors-and-pcall | — | — | — | — |
 | 18 | option-scopes | — | — | — | — |
 | 19 | variable-scopes | — | — | — | n/a |

@@ -83,6 +83,13 @@ jobs:
         # catches order dependence that the forward run hides.
         run: ./drill $(ls -d lessons/*/solutions | tac | tr '\n' ' ')
 
+      - name: Reference drills are deterministic
+        # A third execution in a fresh process, because some nondeterminism is seeded
+        # per process -- LuaJIT's string hashing is, which made a `pairs`-order drill
+        # fail 2 runs in 20 before it was rewritten. Forward and reverse give two
+        # samples; this gives a third for the price of a second.
+        run: ./drill --all-solutions
+
       - name: No exercise drill is silently self-passing
         # An exercise whose answer is blank must report TODO or FAIL, never PASS.
         # A drill that passes unattempted is checking nothing (DESIGN.md §7).
