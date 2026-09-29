@@ -26,6 +26,7 @@ Last updated: 2026-09-28
 | Phase A (00–04) | **complete** |
 | Phase B (05–09) | **complete** |
 | Phase C (10–12) | **complete** |
+| Phase D (13–17) | **complete** |
 | CI | done — stylua, snapshot verification, all solution drills |
 | Appendix b (footguns) | in progress — entries added as lessons produce them |
 | Appendices a, c–g | — |
@@ -51,7 +52,7 @@ Last updated: 2026-09-28
 | 14 | tables | done | done | 20 | n/a |
 | 15 | functions-and-closures | done | done | 20 | n/a |
 | 16 | modules-and-runtimepath | done | done | 18 | `config/16` |
-| 17 | errors-and-pcall | — | — | — | — |
+| 17 | errors-and-pcall | done | done | 18 | `config/17` |
 | 18 | option-scopes | — | — | — | — |
 | 19 | variable-scopes | — | — | — | n/a |
 | 20 | vim-cmd | — | — | — | n/a |
@@ -67,28 +68,34 @@ Last updated: 2026-09-28
 
 ## Notes for the next session
 
-- **Phases A, B and C are complete (lessons 00–12).** Next to author: **13 — Lua in
-  Neovim**, which opens Phase D and the Lua half of the course. It has no config
-  snapshot; the next snapshot is lesson 16 (splitting into modules).
-- Phase D is a different kind of authoring from A–C: the subject is Lua rather than
-  keystrokes, so most drills will be `value` and `check` rather than `keys`. Lesson 13
-  must establish that Neovim runs **LuaJIT (5.1 + extensions)**, not the 5.5 that
-  `lua -v` reports on this machine — verify idioms with
-  `nvim --headless -u NONE -c 'lua …' -c qa`, never with `lua -e`.
+- **Phases A–D are complete (lessons 00–17).** Next to author: **18 — option scopes
+  (`vim.opt` / `vim.o` / `vim.go` / `vim.bo` / `vim.wo`)**, which opens Phase E — the nine
+  `vim.` object-model lessons, and the part of the course the learner asked for most.
+- Phase E notes:
+  - Lesson 18 must resolve the debt lesson 04 deliberately left: `vim.opt` returns an
+    Option *object*, not a value, and `vim.opt.x + 1` yields a table whose `_value` is
+    right — appendix B entry 2 already has the measurements.
+  - Lesson 22 must handle the 0- versus 1-indexing collision that lessons 14 and 10 both
+    flagged forward (`nvim_buf_get_lines` is 0-based and end-exclusive;
+    `nvim_win_get_cursor` returns a 1-based line with a 0-based column).
+  - Lesson 23 is the one the learner named as their goal: keymaps bound to functions they
+    wrote. Everything it needs is now in place — functions and closures (15), modules (16),
+    guarded loading (17).
+  - Lesson 26 should use the measured `E5560` fast-event example already in appendix B.
 - Authoring order that works:
-  1. Verify every fact headlessly first, printing buffer contents with `%q` so
-     whitespace is visible. Never write prose around an unrun command.
-  2. Write `solutions/` with the answer marked. Four forms, documented in
-     `AUTHORING.md`: `keys = …`; `local answer = X -- <- your answer`;
-     `return X -- <- your answer`; and `-- ANSWER_BEGIN` / `-- ANSWER_END` for a
-     multi-line **value**. For a statement whose effect the check asserts on, use the
-     line form plus a `-- TODO_GUARD`, or the exercise reports FAIL instead of TODO.
+  1. Verify every fact headlessly first. Print buffer contents with `%q` so whitespace is
+     visible, and never write prose around an unrun command.
+  2. Write `solutions/` with the answer marked — four forms, in `AUTHORING.md`. Use the
+     `ANSWER_BEGIN` block only for a multi-line **value**; for a statement whose effect the
+     check asserts on, use the line form plus a `-- TODO_GUARD`.
   3. `./drill NN --solutions` until green.
   4. `bash tools/derive-exercises.sh NN`.
   5. Hand-author BUG HUNT drills in `exercises/` (the tool skips `*bug-hunt*`), and
-     **confirm the planted mistake actually fails** — three have silently passed.
-  6. `stylua .`, then `bash tools/check-drill-specs.sh`.
-- The drill runner has now caught eleven wrong author expectations.
+     **confirm the planted mistake actually fails** — four have silently passed.
+  6. `stylua .`, then `bash tools/check-drill-specs.sh` and
+     `bash tools/check-exercises-unsolved.sh`.
+- The drill runner has now caught fifteen wrong author expectations, including one flaky
+  drill. Run a new drill thirty times before trusting it (`AUTHORING.md` has the loop).
 
 ## Corrections already folded into prose — do not reintroduce
 
