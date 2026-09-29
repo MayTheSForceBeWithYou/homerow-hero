@@ -44,7 +44,7 @@ Last updated: 2026-09-28
 | 08 | ex-ranges-substitute | done | done | 24 | n/a |
 | 09 | global-and-normal | done | done | 21 | n/a |
 | 10 | buffers-windows-tabs | done | done | 18 | `config/10` |
-| 11 | search-and-quickfix | — | — | — | — |
+| 11 | search-and-quickfix | done | done | 19 | `config/11` |
 | 12 | help-as-a-database | — | — | — | n/a |
 | 13 | lua-in-neovim | — | — | — | n/a |
 | 14 | tables | — | — | — | n/a |

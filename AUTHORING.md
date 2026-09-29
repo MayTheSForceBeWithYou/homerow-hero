@@ -201,6 +201,12 @@ in one of four ways:
 multi-statement answer needs it, and so does anything stylua might wrap — a line-end
 marker left on a wrapped fragment silently produces a broken exercise.
 
+But the block form always produces `local answer = nil`, so use it only when the answer
+*is a value*. When the answer is a **statement** whose effect the check asserts on — a
+`vim.cmd(…)` the learner must write — use the line form and add a `-- TODO_GUARD`
+above it. Otherwise the exercise reports FAIL rather than TODO while unattempted, and
+an unattempted drill should never look broken.
+
 A `check` drill with no `answer` variable cannot tell "unattempted" from "wrong", so
 also place a bare `-- TODO_GUARD` comment where the learner's code belongs. It is an
 inert comment in the solution and becomes `error('DRILL_TODO')` in the exercise, so

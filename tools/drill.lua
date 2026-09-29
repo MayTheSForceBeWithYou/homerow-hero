@@ -106,11 +106,18 @@ local function reset_registers()
   end
 end
 
+-- A drill that changes the working directory (lesson 11's quickfix drills `:cd` into
+-- a temp fixture tree) must not affect the next one.
+local baseline_cwd = vim.fn.getcwd()
+
 local function isolate()
   restore_options()
   reset_registers()
   vim.g.mapleader = nil
   vim.g.maplocalleader = nil
+  if vim.fn.getcwd() ~= baseline_cwd then
+    pcall(vim.cmd, 'cd ' .. vim.fn.fnameescape(baseline_cwd))
+  end
 end
 
 ---------------------------------------------------------------------------
@@ -326,19 +333,24 @@ local function load_drill(path)
   return drill, nil
 end
 
+-- Targets are resolved to ABSOLUTE paths up front. Relative paths would be
+-- interpreted against the working directory at load time, which a previous drill may
+-- have changed -- that failure looks like a dozen drills vanishing at once.
 local function expand_targets(args)
   local files = {}
   local function add_dir(dir)
     local found = vim.fn.glob(dir .. '/*.lua', false, true)
     table.sort(found)
-    vim.list_extend(files, found)
+    for _, f in ipairs(found) do
+      table.insert(files, vim.fn.fnamemodify(f, ':p'))
+    end
   end
   for _, arg in ipairs(args) do
     local stat = uv.fs_stat(arg)
     if stat and stat.type == 'directory' then
       add_dir(arg)
     elseif stat then
-      table.insert(files, arg)
+      table.insert(files, vim.fn.fnamemodify(arg, ':p'))
     else
       say('%sno such drill path: %s%s', RED, arg, RESET)
       os.exit(2)
@@ -438,7 +450,14 @@ say('%s', summary)
 if counts.fail + counts.broken > 0 then
   say('')
   say('%sre-run just what failed:%s', DIM, RESET)
-  say('  ./drill %s', table.concat(failures, ' '))
+  -- Targets are absolute internally; print them relative to the repo so the
+  -- suggested command stays short enough to copy.
+  local root = vim.fn.getcwd() .. '/'
+  local shown = {}
+  for i, f in ipairs(failures) do
+    shown[i] = (f:sub(1, #root) == root) and f:sub(#root + 1) or f
+  end
+  say('  ./drill %s', table.concat(shown, ' '))
   os.exit(1)
 end
 os.exit(0)
