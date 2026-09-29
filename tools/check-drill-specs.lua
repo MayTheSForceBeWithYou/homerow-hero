@@ -85,7 +85,18 @@ for _, lesson in ipairs(vim.fn.glob('lessons/*', false, true)) do
       if vim.fn.filereadable(sol_path) == 1 then
         local ex, ex_err = load_drill(ex_path)
         local sol, sol_err = load_drill(sol_path)
-        if not ex then
+        local is_bug_hunt = name:find('bug-hunt', 1, true) ~= nil
+
+        -- A BUG HUNT exercise may deliberately fail to PARSE. Lesson 13's `//` drill
+        -- does exactly that, because a parse error taking the whole file down -- where
+        -- no pcall can reach it -- is the thing being taught. Its solution must still
+        -- load, so the pair is only exempted from the spec comparison, not from
+        -- correctness.
+        if not ex and is_bug_hunt then
+          if not sol then
+            table.insert(problems, ('%s will not load: %s'):format(sol_path, sol_err))
+          end
+        elseif not ex then
           table.insert(problems, ('%s will not load: %s'):format(ex_path, ex_err))
         elseif not sol then
           table.insert(problems, ('%s will not load: %s'):format(sol_path, sol_err))

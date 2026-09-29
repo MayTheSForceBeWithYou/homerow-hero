@@ -47,7 +47,7 @@ Last updated: 2026-09-28
 | 10 | buffers-windows-tabs | done | done | 18 | `config/10` |
 | 11 | search-and-quickfix | done | done | 19 | `config/11` |
 | 12 | help-as-a-database | done | done | 18 | n/a |
-| 13 | lua-in-neovim | — | — | — | n/a |
+| 13 | lua-in-neovim | done | done | 20 | n/a |
 | 14 | tables | — | — | — | n/a |
 | 15 | functions-and-closures | — | — | — | n/a |
 | 16 | modules-and-runtimepath | — | — | — | — |
