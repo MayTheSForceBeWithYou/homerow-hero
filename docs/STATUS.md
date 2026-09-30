@@ -53,7 +53,7 @@ Last updated: 2026-09-28
 | 15 | functions-and-closures | done | done | 20 | n/a |
 | 16 | modules-and-runtimepath | done | done | 18 | `config/16` |
 | 17 | errors-and-pcall | done | done | 18 | `config/17` |
-| 18 | option-scopes | — | — | — | — |
+| 18 | option-scopes | done | done | 20 | `config/18` |
 | 19 | variable-scopes | — | — | — | n/a |
 | 20 | vim-cmd | — | — | — | n/a |
 | 21 | vim-fn | — | — | — | — |
