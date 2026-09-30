@@ -9,41 +9,88 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    defaults:
-      run:
-        shell: bash
+    # The course targets WSL2/Arch with Neovim 0.12 (DESIGN.md §1). Linux only:
+    # nothing in the course is Windows-specific, and `./drill`, use-snapshot.sh and
+    # the check-* scripts are bash.
+    runs-on: ubuntu-latest
+
+    # NOTE: there is deliberately no `actions/setup-node` step here.
+    #
+    # The "Node.js 20 is deprecated" warning is about the runtime each *action*
+    # declares in its own action.yml (`runs.using: node20`). `setup-node` installs a
+    # Node for your own `run:` steps and cannot change that -- and because
+    # setup-node@v4 is itself a node20 action, adding it makes the warning worse by
+    # naming a third offender. The fix is to bump each action to a version whose
+    # action.yml says node24, which is what the pins below are.
+    #
+    # Nothing in this workflow runs Node at all: the steps are bash, nvim, and the
+    # stylua binary.
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        # v7.0.1 -- action.yml declares node24. (v4 declared node20.)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup Neovim nightly
-        # Pinned to the v1 tag's commit; re-pin deliberately, never float.
+      - name: Setup Neovim
+        # Pinned deliberately. The course teaches 0.12 APIs and transcribes real
+        # output, so floating on nightly would silently invalidate lesson prose.
+        # This commit is what the v1 tag points at and already declares node24.
         uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1
         with:
           neovim: true
-          version: nightly
+          version: v0.12.5
 
       - name: Setup stylua
-        uses: JohnnyMorganz/stylua-action@v4
+        # v5.0.0 -- action.yml declares node24. (v4 declared node20.) Same three
+        # inputs as v4, so this is a drop-in bump.
+        uses: JohnnyMorganz/stylua-action@76fd70c03e6340ceaf673366712db9b20560b402 # v5.0.0
         with:
-          version: 0.20.0
+          # Pinned, not `latest`: a formatter upgrade that changes output would fail
+          # this job on files nobody touched. Verified that the repo is already
+          # conformant under 2.5.2 with the existing .stylua.toml.
+          version: 2.5.2
           token: ${{ secrets.GITHUB_TOKEN }}
-          # Install only; the real check runs in the next step.
+          # Install only; the real check is a separate step so its failure is legible.
           args: --version
 
-      - name: Check Neovim version
-        run: nvim --version
+      - name: Report versions
+        run: |
+          nvim --version | head -3
+          stylua --version
 
-      - name: Run stylua
+      - name: Formatting (stylua)
         run: stylua --check .
 
-      - name: Load all Lua snippets headlessly
-        run: bash tests/load_all_lua.sh
+      - name: Every cited :help tag resolves
+        run: bash tools/check-help-tags.sh
 
-      - name: Run lesson verification scripts
-        run: bash tests/run_headless_tests.sh
+      - name: Every config snapshot starts cleanly
+        run: bash tools/use-snapshot.sh --verify-all
+
+      - name: Exercises and solutions pose the same problem
+        # Guards the real drift risk in a paired tree: a solution's `want` edited
+        # without its exercise's, which hands the learner an unsolvable drill while
+        # the reference answer still passes.
+        run: bash tools/check-drill-specs.sh
+
+      - name: Every reference drill passes
+        # The real check on the course's correctness: a solution that does not
+        # pass is a bug in the lesson, not in the learner.
+        run: ./drill --all-solutions
+
+      - name: Reference drills pass in reverse order too
+        # Drills share one Neovim session, so a drill that leaks global state can
+        # make a later one pass or fail by accident. Running the suite backwards
+        # catches order dependence that the forward run hides.
+        run: ./drill $(ls -d lessons/*/solutions | tac | tr '\n' ' ')
+
+      - name: Reference drills are deterministic
+        # A third execution in a fresh process, because some nondeterminism is seeded
+        # per process -- LuaJIT's string hashing is, which made a `pairs`-order drill
+        # fail 2 runs in 20 before it was rewritten. Forward and reverse give two
+        # samples; this gives a third for the price of a second.
+        run: ./drill --all-solutions
+
+      - name: No exercise drill is silently self-passing
+        # An exercise whose answer is blank must report TODO or FAIL, never PASS.
+        # A drill that passes unattempted is checking nothing (DESIGN.md §7).
+        run: bash tools/check-exercises-unsolved.sh
